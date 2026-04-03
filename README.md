@@ -8,3 +8,5 @@
 ```bash
 DISCORD_CLIENT_ID=<discord_client_id> DISCORD_CLIENT_SECRET=<discord_client_secret> node discord-rpc-bridge.js
 ```
+
+5. Open the html in your browser
