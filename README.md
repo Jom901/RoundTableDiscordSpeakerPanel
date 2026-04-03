@@ -1,3 +1,11 @@
+<img width="2556" height="1305" alt="Screenshot_20260403_124906" src="https://github.com/user-attachments/assets/cfbadb40-b639-42b1-9939-ece02f89d125" />
+
+## Features
+1. Lists participants
+1. Automatically picks up list of users in your channel
+2. Automatically removes users from list of participants
+3. Automatically lights up users who are actively speaking/triggering discord's mic recording
+
 ## USAGE
 
 1. Go to https://discord.com/developers to register an application for yourself
@@ -10,3 +18,4 @@ DISCORD_CLIENT_ID=<discord_client_id> DISCORD_CLIENT_SECRET=<discord_client_secr
 ```
 
 5. Open the html in your browser
+
