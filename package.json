@@ -1,0 +1,12 @@
+{
+  "name": "discord-rpc-bridge",
+  "version": "1.0.0",
+  "description": "Bridge between Discord RPC (IPC) and browser WebSocket",
+  "main": "discord-rpc-bridge.js",
+  "scripts": {
+    "start": "node discord-rpc-bridge.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

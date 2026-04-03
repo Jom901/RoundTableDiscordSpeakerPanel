@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roundtable Speaker Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e10;
+    --surface: #1a1a1e;
+    --surface2: #24242a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0efe8;
+    --muted: #888884;
+    --green: #3ecf8e;
+    --green-dim: rgba(62,207,142,0.15);
+    --green-glow: rgba(62,207,142,0.35);
+    --red: #e05353;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  body.transparent-mode {
+    background: transparent !important;
+  }
+  body.transparent-mode #setup-panel {
+    display: none !important;
+  }
+  body.transparent-mode #grid {
+    pointer-events: none;
+  }
+
+  /* ── header ── */
+  #header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem; gap: 1rem; flex-wrap: wrap;
+  }
+  #header h1 {
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase; font-family: var(--mono);
+  }
+  .header-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── setup panel ── */
+  #setup-panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+  #setup-panel h2 {
+    font-size: 12px; font-weight: 500; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em; font-family: var(--mono);
+    margin-bottom: 1rem;
+  }
+  .add-row {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  input[type=text] {
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus { border-color: var(--green); }
+  input[type=text]::placeholder { color: var(--muted); }
+  #name-input { width: 180px; }
+  #discord-id-input { width: 160px; font-family: var(--mono); font-size: 13px; }
+
+  label.upload-btn, button {
+    padding: 8px 14px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  label.upload-btn:hover, button:hover {
+    background: #2e2e35; border-color: rgba(255,255,255,0.22);
+  }
+  input[type=file] { display: none; }
+
+  button.primary {
+    background: var(--green);
+    color: #051a0e;
+    border-color: var(--green);
+    font-weight: 600;
+  }
+  button.primary:hover { background: #5edca8; border-color: #5edca8; }
+
+  button.danger { color: var(--red); border-color: rgba(224,83,83,0.3); }
+  button.danger:hover { background: rgba(224,83,83,0.1); border-color: var(--red); }
+
+  button.ghost { color: var(--muted); border-color: var(--border); }
+  button.ghost:hover { color: var(--text); border-color: var(--border2); }
+
+  .img-preview {
+    width: 32px; height: 32px; border-radius: 50%;
+    object-fit: cover; border: 1px solid var(--border2);
+    display: none;
+  }
+  .img-preview.visible { display: block; }
+
+  /* ── shortcuts hint ── */
+  #shortcuts-hint {
+    font-size: 12px; color: var(--muted); font-family: var(--mono);
+    margin-bottom: 1.25rem; display: none;
+  }
+  #shortcuts-hint.visible { display: block; }
+  kbd {
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 4px; padding: 1px 5px; font-size: 11px;
+  }
+
+  /* ── participant grid ── */
+  #grid {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+  }
+
+  .participant {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 16px 18px 14px;
+    background: var(--surface);
+    border: 1.5px solid transparent;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    min-width: 108px;
+    user-select: none;
+  }
+  .participant:hover { background: var(--surface2); }
+  .participant:active { transform: scale(0.97); }
+
+  .participant.speaking {
+    border-color: var(--green);
+    background: var(--green-dim);
+    box-shadow: 0 0 0 4px var(--green-glow), 0 0 28px var(--green-glow);
+  }
+
+  /* shortcut badge */
+  .shortcut-badge {
+    position: absolute; top: 6px; right: 8px;
+    font-size: 10px; font-family: var(--mono); color: var(--muted);
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 4px; padding: 1px 5px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  #shortcuts-hint.visible ~ #grid .shortcut-badge { opacity: 0.7; }
+
+  /* avatar ring */
+  .avatar-ring {
+    width: 70px; height: 70px; border-radius: 50%;
+    border: 2.5px solid transparent;
+    padding: 2px;
+    transition: border-color 0.2s;
+  }
+  .participant.speaking .avatar-ring {
+    border-color: var(--green);
+  }
+
+  .avatar-img {
+    width: 100%; height: 100%;
+    border-radius: 50%; object-fit: cover;
+  }
+  .avatar-initials {
+    width: 100%; height: 100%; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 600;
+  }
+
+  .participant-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    text-align: center; max-width: 96px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: color 0.2s;
+  }
+  .participant.speaking .participant-name { color: var(--green); }
+
+  /* audio wave */
+  .wave {
+    display: flex; align-items: flex-end; gap: 2px; height: 14px;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .participant.speaking .wave { opacity: 1; }
+  .bar {
+    width: 3px; border-radius: 2px;
+    background: var(--green);
+    animation: wave-anim 0.9s ease-in-out infinite;
+  }
+  .bar:nth-child(1) { animation-delay: 0s; }
+  .bar:nth-child(2) { animation-delay: 0.18s; }
+  .bar:nth-child(3) { animation-delay: 0.36s; }
+  .bar:nth-child(4) { animation-delay: 0.18s; }
+  .bar:nth-child(5) { animation-delay: 0s; }
+  @keyframes wave-anim {
+    0%, 100% { height: 3px; }
+    50% { height: 13px; }
+  }
+
+  /* pulse ring */
+  .pulse-ring {
+    position: absolute; inset: -4px;
+    border-radius: 18px;
+    border: 2px solid var(--green);
+    opacity: 0; pointer-events: none;
+    animation: none;
+  }
+  .participant.speaking .pulse-ring {
+    animation: pulse-ring 1.8s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.07); opacity: 0; }
+  }
+
+  /* remove button */
+  .remove-btn {
+    position: absolute; top: 5px; left: 6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    color: var(--muted); font-size: 12px; line-height: 18px;
+    text-align: center; cursor: pointer;
+    display: none; z-index: 2;
+    padding: 0; margin: 0; font-family: var(--font);
+    transition: background 0.15s, color 0.15s;
+  }
+  .participant:hover .remove-btn { display: block; }
+  .remove-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* empty state */
+  .empty-state {
+    color: var(--muted); font-size: 14px; padding: 1rem 0;
+    font-family: var(--mono);
+  }
+
+  /* transparent overlay toggle */
+  #obs-overlay-btn {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em;
+  }
+
+  #obs-banner {
+    display: none;
+    position: fixed; bottom: 1rem; right: 1rem;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px; color: var(--muted); font-family: var(--mono);
+    z-index: 999;
+  }
+  #obs-banner button { font-size: 11px; padding: 4px 10px; margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Roundtable — Speaker Panel</h1>
+  <div class="header-btns">
+    <button class="ghost" id="shortcuts-toggle">⌨ Shortcuts</button>
+    <button class="ghost" id="clear-btn">Clear all</button>
+    <button class="ghost" id="obs-overlay-btn">⬡ OBS overlay mode</button>
+  </div>
+</div>
+
+<p id="shortcuts-hint">
+  Press <kbd>1</kbd>–<kbd>9</kbd> to toggle speakers · <kbd>0</kbd> to clear all · <kbd>S</kbd> toggle setup panel
+</p>
+
+<div id="setup-panel">
+  <h2>Add participant</h2>
+  <div class="add-row">
+    <input type="text" id="name-input" placeholder="Name" maxlength="24" />
+    <input type="text" id="discord-id-input" placeholder="Discord user ID" maxlength="32" />
+    <label class="upload-btn" id="upload-label">
+      📷 Photo
+      <input type="file" id="img-input" accept="image/*" />
+    </label>
+    <img class="img-preview" id="img-preview" />
+    <button class="primary" id="add-btn">+ Add</button>
+  </div>
+</div>
+
+<div id="grid">
+  <p class="empty-state">Add your first participant above.</p>
+</div>
+
+<div id="obs-banner">
+  Overlay mode — click speakers to toggle &nbsp;
+  <button onclick="exitOverlay()">Exit</button>
+</div>
+
+<script>
+  const participants = [];
+  let pendingImg = null;
+  let shortcutsVisible = false;
+  let setupVisible = true;
+
+  const grid = document.getElementById('grid');
+  const nameInput      = document.getElementById('name-input');
+  const discordIdInput = document.getElementById('discord-id-input');
+  const imgInput = document.getElementById('img-input');
+  const imgPreview = document.getElementById('img-preview');
+  const addBtn = document.getElementById('add-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const shortcutsToggle = document.getElementById('shortcuts-toggle');
+  const shortcutsHint = document.getElementById('shortcuts-hint');
+  const setupPanel = document.getElementById('setup-panel');
+  const obsBanner = document.getElementById('obs-banner');
+
+  const COLORS = [
+    ['#1e3a5a','#63a8e0'],['#1a3d2b','#52c48a'],['#3d1e2e','#e07fa8'],
+    ['#3a2a1a','#e0a55a'],['#2a1e3d','#9a7ae0'],['#1e3a3a','#52c4c4'],
+    ['#3a1e1e','#e07070'],['#2e3a1e','#8cc45a'],
+  ];
+
+  function getColor(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+    return COLORS[h % COLORS.length];
+  }
+
+  function getInitials(name) {
+    return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  imgInput.addEventListener('change', () => {
+    const file = imgInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingImg = e.target.result;
+      imgPreview.src = pendingImg;
+      imgPreview.classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  addBtn.addEventListener('click', addParticipant);
+  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') addParticipant(); });
+
+  function addParticipant() {
+    const name      = nameInput.value.trim();
+    const discordId = discordIdInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    participants.push({ id: Date.now(), name, discordId: discordId || null, img: pendingImg, speaking: false });
+    nameInput.value      = '';
+    discordIdInput.value = '';
+    pendingImg = null;
+    imgInput.value = '';
+    imgPreview.src = '';
+    imgPreview.classList.remove('visible');
+    render();
+    nameInput.focus();
+  }
+
+  clearBtn.addEventListener('click', () => {
+    participants.forEach(p => p.speaking = false);
+    render();
+  });
+
+  shortcutsToggle.addEventListener('click', () => {
+    shortcutsVisible = !shortcutsVisible;
+    shortcutsHint.classList.toggle('visible', shortcutsVisible);
+  });
+
+  document.getElementById('obs-overlay-btn').addEventListener('click', () => {
+    document.body.classList.add('transparent-mode');
+    obsBanner.style.display = 'block';
+  });
+
+  function exitOverlay() {
+    document.body.classList.remove('transparent-mode');
+    obsBanner.style.display = 'none';
+  }
+
+  document.addEventListener('keydown', e => {
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT') return;
+
+    if (e.key === 's' || e.key === 'S') {
+      setupVisible = !setupVisible;
+      setupPanel.style.display = setupVisible ? '' : 'none';
+      return;
+    }
+    if (e.key === '0') {
+      participants.forEach(p => p.speaking = false);
+      render(); return;
+    }
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 9) {
+      const p = participants[num - 1];
+      if (p) { p.speaking = !p.speaking; render(); }
+    }
+  });
+
+  function render() {
+    if (participants.length === 0) {
+      grid.innerHTML = '<p class="empty-state">Add your first participant above.</p>';
+      return;
+    }
+    grid.innerHTML = '';
+    participants.forEach((p, idx) => {
+      const card = document.createElement('div');
+      card.className = 'participant' + (p.speaking ? ' speaking' : '');
+
+      const pulse = document.createElement('div');
+      pulse.className = 'pulse-ring';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = '×';
+      removeBtn.title = 'Remove';
+      removeBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        participants.splice(participants.findIndex(x => x.id === p.id), 1);
+        render();
+      });
+
+      const shortcutBadge = document.createElement('span');
+      shortcutBadge.className = 'shortcut-badge';
+      shortcutBadge.textContent = idx < 9 ? String(idx + 1) : '';
+
+      const ring = document.createElement('div');
+      ring.className = 'avatar-ring';
+
+      if (p.img) {
+        const img = document.createElement('img');
+        img.className = 'avatar-img';
+        img.src = p.img;
+        ring.appendChild(img);
+      } else {
+        const ini = document.createElement('div');
+        ini.className = 'avatar-initials';
+        const [bg, fg] = getColor(p.name);
+        ini.style.background = bg; ini.style.color = fg;
+        ini.textContent = getInitials(p.name);
+        ring.appendChild(ini);
+      }
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'participant-name';
+      nameEl.textContent = p.name;
+
+      const wave = document.createElement('div');
+      wave.className = 'wave';
+      for (let i = 0; i < 5; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        wave.appendChild(bar);
+      }
+
+      card.appendChild(pulse);
+      card.appendChild(removeBtn);
+      card.appendChild(shortcutBadge);
+      card.appendChild(ring);
+      card.appendChild(nameEl);
+      card.appendChild(wave);
+
+      card.addEventListener('click', () => {
+        p.speaking = !p.speaking;
+        render();
+      });
+
+      grid.appendChild(card);
+    });
+  }
+
+  render();
+
+  // ── Discord participant helpers ─────────────────────────────────────────────
+
+  function discordAvatarUrl(user) {
+    if (user.avatar) {
+      return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+    }
+    const idx = user.discriminator ? parseInt(user.discriminator) % 5 : 0;
+    return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+  }
+
+  function addDiscordParticipant(user) {
+    if (!user?.id) return;
+    if (participants.some(p => p.discordId === user.id)) return; // already added
+    participants.push({
+      id:        Date.now() + Math.random(),
+      name:      user.nick ?? user.global_name ?? user.username ?? user.id,
+      discordId: user.id,
+      img:       discordAvatarUrl(user),
+      speaking:  false,
+    });
+    render();
+  }
+
+  // ── Discord RPC Bridge ──────────────────────────────────────────────────────
+  // Connects to discord-rpc-bridge.js via WebSocket and logs all RPC events.
+  (function initDiscordRPC() {
+    const WS_URL = 'ws://localhost:6969';
+    let ws               = null;
+    let selfUser         = null;
+    let currentChannelId = null;
+
+    function connect() {
+      console.log('[Discord RPC] Connecting to bridge at', WS_URL, '...');
+      ws = new WebSocket(WS_URL);
+
+      ws.addEventListener('open', () => {
+        console.log('[Discord RPC] Bridge WebSocket open');
+      });
+
+      ws.addEventListener('message', (event) => {
+        let msg;
+        try { msg = JSON.parse(event.data); }
+        catch { console.warn('[Discord RPC] Non-JSON message:', event.data); return; }
+
+        switch (msg.type) {
+          case 'CONNECTION':
+            if (msg.status === 'connected') {
+              console.group('[Discord RPC] Handshake — READY');
+              console.log('RPC version :', msg.v);
+              console.log('Config      :', msg.config);
+              console.groupEnd();
+            } else {
+              console.warn('[Discord RPC] Disconnected from Discord');
+            }
+            break;
+
+          case 'AUTHENTICATED':
+            selfUser = msg.user;
+            console.group('[Discord RPC] Authenticated');
+            console.log('User   :', msg.user);
+            console.log('Scopes :', msg.scopes);
+            console.groupEnd();
+            break;
+
+          case 'VOICE_CHANNEL':
+            if (msg.id) {
+              console.log('[Discord RPC] In voice channel:', msg.name ?? msg.id, `(id: ${msg.id})`);
+              if (msg.id !== currentChannelId) {
+                participants.length = 0; // clear on channel switch
+              }
+              currentChannelId = msg.id;
+              if (selfUser) addDiscordParticipant(selfUser);
+              (msg.members ?? []).forEach(addDiscordParticipant);
+            } else {
+              console.log('[Discord RPC] Not in any voice channel — clearing participants');
+              currentChannelId = null;
+              participants.length = 0;
+              render();
+            }
+            break;
+
+          case 'VOICE_STATE_CREATE':
+            console.log('[Discord RPC] User joined channel:', msg.user?.username, msg.user?.id);
+            addDiscordParticipant(msg.user);
+            break;
+
+          case 'VOICE_STATE_DELETE': {
+            const idx = participants.findIndex(p => p.discordId === msg.user_id);
+            if (idx !== -1) { participants.splice(idx, 1); render(); }
+            break;
+          }
+
+          case 'SPEAKING_START': {
+            console.log('[Discord RPC] SPEAKING_START  user_id:', msg.user_id, ' channel_id:', msg.channel_id);
+            const p = participants.find(p => p.discordId === msg.user_id);
+            if (p) { p.speaking = true; render(); }
+            break;
+          }
+
+          case 'SPEAKING_STOP': {
+            console.log('[Discord RPC] SPEAKING_STOP   user_id:', msg.user_id, ' channel_id:', msg.channel_id);
+            const p = participants.find(p => p.discordId === msg.user_id);
+            if (p) { p.speaking = false; render(); }
+            break;
+          }
+
+          case 'AUTH_ERROR':
+          case 'ERROR':
+            console.error('[Discord RPC] Error:', msg.message ?? msg.code);
+            break;
+
+          default:
+            console.log('[Discord RPC]', msg.type, msg);
+        }
+      });
+
+      ws.addEventListener('close', () => {
+        console.warn('[Discord RPC] Bridge disconnected — retrying in 3s');
+        setTimeout(connect, 3000);
+      });
+
+      ws.addEventListener('error', () => {
+        console.warn('[Discord RPC] Could not reach bridge — is discord-rpc-bridge.js running?');
+      });
+    }
+
+    connect();
+  })();
+</script>
+</body>
+</html>
